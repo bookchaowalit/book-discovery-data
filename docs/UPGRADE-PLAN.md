@@ -49,3 +49,7 @@ outside the monorepo, a lake failure dropped the HTTP connection, and there was 
 - README: configuration table for every environment variable the API reads.
 - New `tests/test_config.py` (4 tests, 8 subtests); refresh test asserts the truthful reply.
   22 passed / 1 optional skip; ruff 0.15.8 and 0.16.9 clean.
+- `attribution_required` failed open: `bool(payload.get(...))` read an empty
+  CSV cell as False (attribution dropped) and the string "False" as True. New
+  `store._attribution_required` keeps attribution unless the value is an
+  explicit false (`False`, "false", "0", "no", "off"). Two regression tests.

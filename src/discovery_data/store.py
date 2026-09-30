@@ -101,6 +101,19 @@ def make_record_id(row: dict[str, Any]) -> str:
     )
 
 
+def _attribution_required(value: Any) -> bool:
+    """Fail closed: only an explicit false turns attribution off.
+
+    Payloads that went through CSV carry strings, and ``bool()`` read an empty
+    cell as False (attribution silently dropped) and "False" as True.
+    """
+    if isinstance(value, bool):
+        return value
+    if value is None or not str(value).strip():
+        return True
+    return str(value).strip().casefold() not in {"false", "0", "no", "off"}
+
+
 def signal_item_from_bronze(
     row: dict[str, Any], *, history: bool = False, history_idx: int = 0
 ) -> dict[str, Any]:
@@ -128,7 +141,7 @@ def signal_item_from_bronze(
             "captured_at": str(payload.get("captured_at") or event_time),
             "capture_kind": str(payload.get("capture_kind") or "current_snapshot"),
             "record_kind": str(payload.get("record_kind") or "technology_signal"),
-            "attribution_required": bool(payload.get("attribution_required", True)),
+            "attribution_required": _attribution_required(payload.get("attribution_required")),
             "event_time": event_time,
             "ingest_run_id": str(row.get("ingest_run_id") or ""),
             "source_record_id": str(row.get("source_record_id") or ""),
