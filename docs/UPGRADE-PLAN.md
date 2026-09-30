@@ -53,3 +53,4 @@ outside the monorepo, a lake failure dropped the HTTP connection, and there was 
   CSV cell as False (attribution dropped) and the string "False" as True. New
   `store._attribution_required` keeps attribution unless the value is an
   explicit false (`False`, "false", "0", "no", "off"). Two regression tests.
+- Bumped the `[lake]` pin `3523a62` -> `4c24c66` (NDJSON/BOM/U+2028/double-decode fixes); 24 passed / 1 optional skip with the new package; ruff 0.15.8 + 0.16.9 clean.
