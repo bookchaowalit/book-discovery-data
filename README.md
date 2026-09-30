@@ -34,7 +34,27 @@ is skipped with an explicit reason when that directory is absent.
 The API reads only the technology_signals and technology_signals_history
 Bronze datasets. POST /v1/refresh is disabled by default; collection is an
 explicit operator action. When enabled, it only acknowledges (202) a request
-whose bearer token matches REFRESH_TOKEN (constant-time comparison).
+whose bearer token matches REFRESH_TOKEN (constant-time comparison); the reply
+says `job_started: false` and names the operator command
+(`task scraping:discovery:ingest`), because no collection runs from the API.
+
+## Configuration
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `API_HOST` | `127.0.0.1` | Bind address (loopback by default) |
+| `API_PORT` | `8110` | Port, integer 0-65535 |
+| `CORS_ALLOWED_ORIGINS` | empty | Comma-separated extra origins; loopback origins are always allowed |
+| `STALE_AFTER_HOURS` | `36` | Records older than this report stale (history uses 4x); finite, > 0 |
+| `SOLO_EMPIRE_DATA_LAKE_URI` / `DATA_LAKE_URI` | empty | Lake root to read Bronze from |
+| `SOLO_EMPIRE_ROOT` | empty | Solo Empire checkout used to locate the shared runtime |
+| `LAKE_READ_MODE` | `parquet` | Passed to the shared lake reader |
+| `LAKE_READ_FALLBACK` | `error` | Passed to the shared lake reader |
+| `ALLOW_REFRESH` / `REFRESH_TOKEN` | off / empty | Enable the acknowledge-only `POST /v1/refresh` |
+| `FREE_ONLY`, `ALLOW_PAID_PROVIDERS`, `ALLOW_EXTERNAL_WRITES` | on / off / off | Policy flags reported by `/v1/metadata` |
+
+Invalid `API_PORT` or `STALE_AFTER_HOURS` values stop start-up with a
+`ConfigError` naming the variable (blank values use the default).
 
 The shared `data_lake` runtime comes from the `[lake]` extra
 (`solo-empire-data-lake`, pinned to a commit) or, inside Solo Empire, from

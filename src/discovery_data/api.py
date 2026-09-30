@@ -71,6 +71,9 @@ def _status_envelope(data_status: str, error: str, **extra: Any) -> dict[str, An
     return body
 
 
+REFRESH_OPERATOR_COMMAND = "task scraping:discovery:ingest"
+
+
 def _refresh_authorized(auth_header: str) -> bool:
     if not (config.ALLOW_REFRESH and config.REFRESH_TOKEN):
         return False
@@ -248,7 +251,21 @@ class DataProductHandler(BaseHTTPRequestHandler):
             return _json_response(self, 404, _status_envelope("not_found", "unknown endpoint"))
         if not _refresh_authorized(self.headers.get("Authorization", "")):
             return _json_response(self, 403, _status_envelope("forbidden", "refresh disabled"))
-        body = _status_envelope("accepted", "", items=[{"accepted": True, "action": "refresh_acknowledged"}])
+        # Collection is an explicit operator action (discovery contract:
+        # refresh_default_status 403). An authorised request is acknowledged
+        # only; say so instead of implying a job was started.
+        body = _status_envelope(
+            "accepted",
+            "",
+            items=[
+                {
+                    "accepted": True,
+                    "action": "refresh_acknowledged",
+                    "job_started": False,
+                    "operator_command": REFRESH_OPERATOR_COMMAND,
+                }
+            ],
+        )
         body.pop("error")
         return _json_response(self, 202, body)
 

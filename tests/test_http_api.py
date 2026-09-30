@@ -151,6 +151,9 @@ class HttpApiTests(unittest.TestCase):
         self.assertEqual(status, 202)
         self.assertEqual(body["data_status"], "accepted")
         self.assertNotIn("error", body)
+        # Acknowledge-only: the response must not imply a collection job ran.
+        self.assertEqual(body["items"][0]["job_started"], False)
+        self.assertEqual(body["items"][0]["operator_command"], api.REFRESH_OPERATOR_COMMAND)
 
     def test_empty_refresh_token_never_authorizes(self):
         with patch.object(config, "ALLOW_REFRESH", True), patch.object(config, "REFRESH_TOKEN", ""):
