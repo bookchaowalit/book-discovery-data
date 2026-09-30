@@ -5,6 +5,22 @@ description = "Lake-first technology discovery data contract for Solo Empire."
 requires-python = ">=3.11"
 dependencies = []
 
+[project.optional-dependencies]
+# Shared lake-first runtime (Bronze Parquet, DuckDB reads), pinned to an exact
+# commit so CI runs the lake tests reproducibly. Inside the monorepo (or with
+# SOLO_EMPIRE_ROOT) the parent `infra/scripts/data_lake` is used instead.
+lake = [
+  "solo-empire-data-lake[lake] @ https://github.com/bookchaowalit/solo-empire-data-lake/archive/3523a627fdb8c9f1d0461a251bc1c2fb0af4e4fa.tar.gz",
+]
+dev = ["pytest>=7", "ruff>=0.5"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project.scripts]
 book-discovery-data = "discovery_data.api:main"
 

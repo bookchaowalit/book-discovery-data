@@ -19,9 +19,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dev tools
-        run: python -m pip install "pytest>=7" "ruff>=0.5"
+      # [lake] installs the pinned solo-empire-data-lake runtime, so the
+      # Bronze round-trip tests run here instead of skipping.
+      - name: Install package with dev tools and the shared lake runtime
+        run: python -m pip install -e ".[dev,lake]"
+      - name: Check shared lake runtime is importable
+        run: python -c "from discovery_data import store; assert store.shared_runtime_available()"
       - name: Lint
         run: ruff check .
-      - name: Tests (offline; shared lake runtime tests skip with a reason)
+      - name: Tests (offline; lake tests write only to a temp directory)
         run: python -m pytest -q -rs

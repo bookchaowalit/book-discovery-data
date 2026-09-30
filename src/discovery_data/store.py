@@ -33,14 +33,30 @@ def _load_product_store():
         from data_lake import product_store as product_store_module  # type: ignore
     except ImportError as exc:
         raise SharedRuntimeUnavailable(
-            "Solo Empire data_lake runtime not found; set SOLO_EMPIRE_ROOT or run "
-            "from a Solo Empire checkout"
+            "Solo Empire data_lake runtime not found; install the [lake] extra, "
+            "set SOLO_EMPIRE_ROOT, or run from a Solo Empire checkout"
         ) from exc
 
     return product_store_module
 
 
 _PRODUCT_STORE = None
+
+
+def shared_runtime_available() -> bool:
+    """Return True when the shared ``data_lake`` runtime and its deps import.
+
+    Covers the installed ``[lake]`` extra (``solo-empire-data-lake``) and the
+    ``SOLO_EMPIRE_ROOT`` / parent-checkout fallback used inside Solo Empire.
+    """
+    try:
+        import duckdb  # noqa: F401
+        import pyarrow  # noqa: F401
+
+        _ps()
+    except (ImportError, SharedRuntimeUnavailable):
+        return False
+    return True
 
 
 def _ps():
