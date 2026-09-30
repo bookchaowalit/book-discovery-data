@@ -26,6 +26,11 @@ From this checkout, use an explicit lake path:
     ./scripts/ingest.sh --lake-uri ../../../../../../../../../data/lake-w5 --json
     ./scripts/test.sh
 
+The test runner uses the parent virtualenv on POSIX or Windows/Git Bash.
+API contract and capture replay tests run offline with fixtures, without local
+exports. Only the optional `book-job-scraping/data/exported` directory check
+is skipped with an explicit reason when that directory is absent.
+
 The API reads only the technology_signals and technology_signals_history
 Bronze datasets. POST /v1/refresh is disabled by default; collection is an
 explicit operator action.

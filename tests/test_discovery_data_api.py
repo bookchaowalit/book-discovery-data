@@ -8,14 +8,21 @@ from discovery_data import api, config, store
 
 
 class DiscoveryDataApiTests(unittest.TestCase):
-    def test_contract_and_api_surface(self) -> None:
+    def test_optional_local_capture_directory(self) -> None:
         source = Path(
             config.PROJECT_ROOT.parent
             / "book-job-scraping"
             / "data"
             / "exported"
         )
+        if not source.exists():
+            self.skipTest(
+                "Optional book-job-scraping/data/exported is unavailable; "
+                "offline contract and capture-fixture tests still run"
+            )
         self.assertTrue(source.is_dir())
+
+    def test_contract_and_api_surface(self) -> None:
         self.assertEqual(config.REPO_NAME, "book-discovery-data")
         self.assertEqual(config.DOMAIN, "discovery")
         self.assertEqual(config.SCHEMA_VERSION, "discovery.v1")
