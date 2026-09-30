@@ -33,7 +33,27 @@ is skipped with an explicit reason when that directory is absent.
 
 The API reads only the technology_signals and technology_signals_history
 Bronze datasets. POST /v1/refresh is disabled by default; collection is an
-explicit operator action.
+explicit operator action. When enabled, it only acknowledges (202) a request
+whose bearer token matches REFRESH_TOKEN (constant-time comparison).
+
+The shared `data_lake` runtime is located from `SOLO_EMPIRE_ROOT` first, then
+from the parent directories of this checkout. If it is missing or the lake read
+fails, GET endpoints answer `503` with `data_status: "unavailable"` and no
+paths or exception text; 404/403/400 responses never need the runtime.
+
+## Standalone checks and CI
+
+Without a Solo Empire checkout (as in `.github/workflows/ci.yml`):
+
+    python -m pip install "pytest>=7" "ruff>=0.5"
+    ruff check .
+    python -m pytest -q -rs
+
+`tests/test_http_api.py` drives the real HTTP handler on a loopback port with
+in-memory store stubs (pagination, single record, CORS, refresh auth, 503).
+The Bronze item-builder test skips with an explicit reason when the shared
+runtime is absent; `./scripts/test.sh` still runs the full suite plus the
+monorepo capture-replay test inside a Solo Empire checkout.
 
 ## Contract
 
