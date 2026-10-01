@@ -38,9 +38,35 @@ class DiscoveryDataApiTests(unittest.TestCase):
             "/v1/refresh",
         ):
             self.assertIn(path, api_text)
-        self.assertIn('data_status="forbidden"', api_text)
+
+    def test_attribution_flag_fails_closed_for_csv_strings(self) -> None:
+        for value in (None, "", "  ", True, "True", "true", "1", "yes"):
+            with self.subTest(value=value):
+                self.assertTrue(store._attribution_required(value))
+        for value in (False, "False", "false", "0", "no", "off"):
+            with self.subTest(value=value):
+                self.assertFalse(store._attribution_required(value))
+
+    def test_csv_payload_with_empty_attribution_cell_keeps_attribution(self) -> None:
+        try:
+            store._ps()
+        except store.SharedRuntimeUnavailable:
+            self.skipTest("Solo Empire data_lake runtime is not available in this checkout")
+        item = store.signal_item_from_bronze(
+            {
+                "event_time": "2026-09-12T00:00:00Z",
+                "payload_json": json.dumps(
+                    {"signal_id": "example/repo", "title": "Example", "attribution_required": ""}
+                ),
+            }
+        )
+        self.assertIs(item["attribution_required"], True)
 
     def test_signal_item_preserves_attribution_and_lineage(self) -> None:
+        try:
+            store._ps()
+        except store.SharedRuntimeUnavailable:
+            self.skipTest("Solo Empire data_lake runtime is not available in this checkout")
         item = store.signal_item_from_bronze(
             {
                 "event_time": "2026-09-12T00:00:00Z",

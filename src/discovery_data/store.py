@@ -4,24 +4,59 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from . import config
 
 
+class SharedRuntimeUnavailable(RuntimeError):
+    """The Solo Empire ``data_lake`` runtime could not be located or imported."""
+
+
+def _candidate_roots() -> list[Path]:
+    roots = []
+    if config.SOLO_EMPIRE_ROOT.strip():
+        roots.append(Path(config.SOLO_EMPIRE_ROOT).expanduser().resolve())
+    project = config.PROJECT_ROOT.resolve()
+    roots.extend([project, *project.parents])
+    return roots
+
+
 def _load_product_store():
-    for parent in [config.PROJECT_ROOT.resolve(), *config.PROJECT_ROOT.resolve().parents]:
+    for parent in _candidate_roots():
         scripts = parent / "infra" / "scripts"
         if (scripts / "data_lake" / "product_store.py").is_file():
             if str(scripts) not in sys.path:
                 sys.path.insert(0, str(scripts))
             break
-    from data_lake import product_store as product_store_module  # type: ignore
+    try:
+        from data_lake import product_store as product_store_module  # type: ignore
+    except ImportError as exc:
+        raise SharedRuntimeUnavailable(
+            "Solo Empire data_lake runtime not found; install the [lake] extra, "
+            "set SOLO_EMPIRE_ROOT, or run from a Solo Empire checkout"
+        ) from exc
 
     return product_store_module
 
 
 _PRODUCT_STORE = None
+
+
+def shared_runtime_available() -> bool:
+    """Return True when the shared ``data_lake`` runtime and its deps import.
+
+    Covers the installed ``[lake]`` extra (``solo-empire-data-lake``) and the
+    ``SOLO_EMPIRE_ROOT`` / parent-checkout fallback used inside Solo Empire.
+    """
+    try:
+        import duckdb  # noqa: F401
+        import pyarrow  # noqa: F401
+
+        _ps()
+    except (ImportError, SharedRuntimeUnavailable):
+        return False
+    return True
 
 
 def _ps():
@@ -31,11 +66,12 @@ def _ps():
     return _PRODUCT_STORE
 
 
-def _lake_uri() -> Optional[str]:
+def _lake_uri() -> str | None:
     return config.DATA_LAKE_URI.strip() or None
 
 
 def _contract():
+    _ps()  # locate the shared runtime before importing its adapter
     from data_lake.product_adapter import LakeProductContract  # type: ignore
 
     return LakeProductContract(
@@ -65,6 +101,19 @@ def make_record_id(row: dict[str, Any]) -> str:
     )
 
 
+def _attribution_required(value: Any) -> bool:
+    """Fail closed: only an explicit false turns attribution off.
+
+    Payloads that went through CSV carry strings, and ``bool()`` read an empty
+    cell as False (attribution silently dropped) and "False" as True.
+    """
+    if isinstance(value, bool):
+        return value
+    if value is None or not str(value).strip():
+        return True
+    return str(value).strip().casefold() not in {"false", "0", "no", "off"}
+
+
 def signal_item_from_bronze(
     row: dict[str, Any], *, history: bool = False, history_idx: int = 0
 ) -> dict[str, Any]:
@@ -92,7 +141,7 @@ def signal_item_from_bronze(
             "captured_at": str(payload.get("captured_at") or event_time),
             "capture_kind": str(payload.get("capture_kind") or "current_snapshot"),
             "record_kind": str(payload.get("record_kind") or "technology_signal"),
-            "attribution_required": bool(payload.get("attribution_required", True)),
+            "attribution_required": _attribution_required(payload.get("attribution_required")),
             "event_time": event_time,
             "ingest_run_id": str(row.get("ingest_run_id") or ""),
             "source_record_id": str(row.get("source_record_id") or ""),
@@ -104,7 +153,7 @@ def signal_item_from_bronze(
     return item
 
 
-def load_records(*, data_lake_uri: Optional[str] = None) -> dict[str, Any]:
+def load_records(*, data_lake_uri: str | None = None) -> dict[str, Any]:
     return _ps().load_bronze_dataset(
         _contract(),
         config.LAKE_DATASET_SIGNALS,
@@ -119,7 +168,7 @@ def load_records(*, data_lake_uri: Optional[str] = None) -> dict[str, Any]:
     )
 
 
-def load_history(*, data_lake_uri: Optional[str] = None) -> dict[str, Any]:
+def load_history(*, data_lake_uri: str | None = None) -> dict[str, Any]:
     return _ps().load_bronze_dataset(
         _contract(),
         config.LAKE_DATASET_HISTORY,
@@ -135,8 +184,8 @@ def load_history(*, data_lake_uri: Optional[str] = None) -> dict[str, Any]:
 
 
 def get_record(
-    record_id: str, *, data_lake_uri: Optional[str] = None
-) -> Optional[dict[str, Any]]:
+    record_id: str, *, data_lake_uri: str | None = None
+) -> dict[str, Any] | None:
     return _ps().get_record_from_payload(
         record_id,
         load_records(data_lake_uri=data_lake_uri),
@@ -144,8 +193,8 @@ def get_record(
 
 
 def paginate(
-    items: list[dict[str, Any]], *, limit: int = 50, cursor: Optional[str] = None
-) -> tuple[list[dict[str, Any]], Optional[str]]:
+    items: list[dict[str, Any]], *, limit: int = 50, cursor: str | None = None
+) -> tuple[list[dict[str, Any]], str | None]:
     return _ps().paginate(items, limit=limit, cursor=cursor)
 
 
@@ -153,9 +202,9 @@ def envelope(
     *,
     items: list[dict[str, Any]],
     data_status: str,
-    next_cursor: Optional[str] = None,
-    retrieved_at: Optional[str] = None,
-    extra: Optional[dict[str, Any]] = None,
+    next_cursor: str | None = None,
+    retrieved_at: str | None = None,
+    extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return _ps().envelope(
         schema_version=config.SCHEMA_VERSION,
