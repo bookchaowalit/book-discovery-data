@@ -54,3 +54,8 @@ outside the monorepo, a lake failure dropped the HTTP connection, and there was 
   `store._attribution_required` keeps attribution unless the value is an
   explicit false (`False`, "false", "0", "no", "off"). Two regression tests.
 - Bumped the `[lake]` pin `3523a62` -> `4c24c66` (NDJSON/BOM/U+2028/double-decode fixes); 24 passed / 1 optional skip with the new package; ruff 0.15.8 + 0.16.9 clean.
+- Route access matrix: `api.ROUTE_ACCESS` lists every (method, route); handlers run only for
+  listed pairs (unknown -> 404 JSON, other method on a known route -> 405 JSON with `Allow`;
+  PUT/PATCH/DELETE used to get the stdlib 501 HTML page). `tests/test_route_access.py` pins the
+  table, forbids public writes and drives every route x 5 methods x (anonymous, wrong token,
+  refresh token). Network: the API already binds `127.0.0.1` (`API_HOST`); no compose here.

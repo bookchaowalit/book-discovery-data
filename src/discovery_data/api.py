@@ -44,11 +44,16 @@ def _apply_cors_headers(handler: BaseHTTPRequestHandler) -> None:
 
 
 def _json_response(
-    handler: BaseHTTPRequestHandler, status: int, body: dict[str, Any]
+    handler: BaseHTTPRequestHandler,
+    status: int,
+    body: dict[str, Any],
+    extra_headers: dict[str, str] | None = None,
 ) -> None:
     payload = json.dumps(body, ensure_ascii=False).encode("utf-8")
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json; charset=utf-8")
+    for name, value in (extra_headers or {}).items():
+        handler.send_header(name, value)
     handler.send_header("Content-Length", str(len(payload)))
     handler.send_header("Cache-Control", "no-store")
     _apply_cors_headers(handler)
@@ -72,6 +77,35 @@ def _status_envelope(data_status: str, error: str, **extra: Any) -> dict[str, An
 
 
 REFRESH_OPERATOR_COMMAND = "task scraping:discovery:ingest"
+
+# Route access matrix: every (method, route) the API serves. "public" reads
+# need nothing; "operator" needs ALLOW_REFRESH plus `Authorization: Bearer
+# $REFRESH_TOKEN`. Handlers only run for listed pairs (unknown route -> 404,
+# known route with another method -> 405), and tests/test_route_access.py pins
+# the table, so a new route or a public write fails CI until classified.
+PUBLIC = "public"
+OPERATOR = "operator"
+ROUTE_ACCESS: dict[tuple[str, str], str] = {
+    ("GET", "/healthz"): PUBLIC,
+    ("GET", "/v1/metadata"): PUBLIC,
+    ("GET", "/v1/records"): PUBLIC,
+    ("GET", "/v1/records/{id}"): PUBLIC,
+    ("GET", "/v1/history"): PUBLIC,
+    ("POST", "/v1/refresh"): OPERATOR,
+}
+
+
+def route_pattern(path: str) -> str | None:
+    """The ROUTE_ACCESS route serving ``path`` (already stripped of a trailing slash)."""
+    if any(path == route for _method, route in ROUTE_ACCESS if "{" not in route):
+        return path
+    if path.startswith("/v1/records/"):
+        return "/v1/records/{id}"
+    return None
+
+
+def route_methods(pattern: str | None) -> list[str]:
+    return sorted(method for method, route in ROUTE_ACCESS if route == pattern)
 
 
 def _refresh_authorized(auth_header: str) -> bool:
@@ -124,6 +158,8 @@ class DataProductHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/") or "/"
         query = parse_qs(parsed.query)
+        if not self._route_allowed("GET", path):
+            return None
 
         if path == "/healthz":
             records = load_records()
@@ -244,11 +280,33 @@ class DataProductHandler(BaseHTTPRequestHandler):
 
         return _json_response(self, 404, _status_envelope("not_found", "unknown endpoint"))
 
+    def _route_allowed(self, method: str, path: str) -> bool:
+        """Answer 404/405 for anything ROUTE_ACCESS does not list."""
+        pattern = route_pattern(path)
+        if (method, pattern) in ROUTE_ACCESS:
+            return True
+        methods = route_methods(pattern)
+        if not methods:
+            _json_response(self, 404, _status_envelope("not_found", "unknown endpoint"))
+        else:
+            _json_response(
+                self,
+                405,
+                _status_envelope("method_not_allowed", "method not allowed"),
+                extra_headers={"Allow": ", ".join(methods)},
+            )
+        return False
+
+    def _reject_method(self) -> None:
+        self._route_allowed(self.command, urlparse(self.path).path.rstrip("/") or "/")
+
+    do_PUT = do_PATCH = do_DELETE = _reject_method  # noqa: N815
+
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/") or "/"
-        if path != "/v1/refresh":
-            return _json_response(self, 404, _status_envelope("not_found", "unknown endpoint"))
+        if not self._route_allowed("POST", path):
+            return None
         if not _refresh_authorized(self.headers.get("Authorization", "")):
             return _json_response(self, 403, _status_envelope("forbidden", "refresh disabled"))
         # Collection is an explicit operator action (discovery contract:
