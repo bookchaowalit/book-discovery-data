@@ -5,14 +5,21 @@ outside the monorepo, a lake failure dropped the HTTP connection, and there was 
 
 ## Backlog
 
-- P0: Confirm the new GitHub Actions CI is green on the first push.
-- P0: Restore the canonical remote (README task #91); this checkout is still a scaffold.
+- P1: The remote now exists (`origin` = github.com/bookchaowalit/book-discovery-data, history
+  starts at scaffold commit `9bf8715`); close README task #91 once the owner confirms no older
+  canonical history must be reconciled.
 - P1 (cross-repo decision): `/v1/refresh` is acknowledge-only in every `book-*-data` API and
   the portfolio contract fixes it at 403-by-default. Wiring a real job (single-flight
   subprocess of `scripts/ingest.sh` with timeout + `GET` status) should be decided once for
   the whole portfolio; the reply is now truthful (`job_started: false`) meanwhile.
 - P2: Validate `LAKE_READ_MODE` / `LAKE_READ_FALLBACK` once the shared lake runtime
   publishes its accepted values (it does not validate them today).
+
+## Docs sync (2026-10-01)
+
+- Closed P0 "confirm CI green": the GitHub Actions `CI` runs for `b46da2b` and `bdbe562` on
+  `claude/untitled-session-bhlj06` passed.
+- README no longer claims there is no published remote.
 
 ## Done in this pass (pass 1)
 

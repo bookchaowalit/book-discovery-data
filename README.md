@@ -2,8 +2,9 @@
 
 Lake-first technology discovery data boundary for discovery.v1.
 
-The canonical remote checkout is currently unavailable, so this path is a
-local scaffold that restores the declared product boundary and test command.
+The original canonical checkout was unavailable, so this repository was rebuilt
+from a local scaffold that restores the declared product boundary and test
+command; it is now published at `github.com/bookchaowalit/book-discovery-data`.
 The approved producer remains book-job-scraping; this product reads its four
 public capture families, archives exact bytes through the shared lake adapter,
 and exposes a read-only API over committed Bronze Parquet.
@@ -88,6 +89,6 @@ The boundary follows the repository's discovery-data-contract-v1.yaml:
 - malformed or ambiguous capture rows fail closed before any projection;
 - consumers use the API or Bronze DuckDB and never read scraper CSVs directly.
 
-This scaffold has no published remote or deployment. Keep task #91 open until
-the canonical source is supplied and the checkout receives its normal review,
-origin, and release evidence.
+This product has no deployment. Keep task #91 open until the owner confirms no
+older canonical history needs reconciling and the checkout receives its normal
+review and release evidence.
