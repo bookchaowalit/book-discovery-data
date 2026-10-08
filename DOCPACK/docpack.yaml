@@ -1,0 +1,8 @@
+system_id: bookchaowalit/book-apps/tools/book-discovery-data
+prefix: CARD
+brand: "DISCOVERY DATA"
+subtitle: "data boundary ของสัญญาณเทคโนโลยีแบบ lake-first จาก capture ของ book-job-scraping"
+footer: "Book Discovery Data — Product Card"
+color: "#2f4b6e"
+audience: internal
+tier: L0
