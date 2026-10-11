@@ -187,11 +187,12 @@ class RuntimeDiscoveryTests(unittest.TestCase):
             with self.assertRaises(store.SharedRuntimeUnavailable):
                 store._ps()
 
-    def test_solo_empire_root_is_searched_first(self):
-        with patch.object(config, "SOLO_EMPIRE_ROOT", "/opt/solo-empire"):
-            roots = store._candidate_roots()
-        self.assertEqual(str(roots[0]), "/opt/solo-empire")
-        self.assertIn(config.PROJECT_ROOT.resolve(), roots)
+    def test_bad_data_lake_root_raises_clear_error(self):
+        with patch.object(store, "_PRODUCT_STORE", None), patch.object(
+            config, "SOLO_DATA_LAKE_ROOT", "/nonexistent/solo-data-lake"
+        ), patch("importlib.util.find_spec", return_value=None):
+            with self.assertRaises(store.SharedRuntimeUnavailable):
+                store._ps()
 
     def test_env_bool_parsing(self):
         with patch.dict("os.environ", {"FLAG_A": " Yes ", "FLAG_B": "off"}):

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import sys
 from pathlib import Path
 from typing import Any
@@ -10,31 +11,34 @@ from . import config
 
 
 class SharedRuntimeUnavailable(RuntimeError):
-    """The Solo Empire ``data_lake`` runtime could not be located or imported."""
+    """The shared ``data_lake`` runtime could not be located or imported."""
 
 
-def _candidate_roots() -> list[Path]:
-    roots = []
-    if config.SOLO_EMPIRE_ROOT.strip():
-        roots.append(Path(config.SOLO_EMPIRE_ROOT).expanduser().resolve())
-    project = config.PROJECT_ROOT.resolve()
-    roots.extend([project, *project.parents])
-    return roots
+def _use_sibling_runtime() -> None:
+    """Put a solo-data-lake checkout (``SOLO_DATA_LAKE_ROOT``) on ``sys.path``.
+
+    Only used when the ``solo-empire-data-lake`` package is not installed.
+    """
+    root = config.SOLO_DATA_LAKE_ROOT.strip()
+    if not root or importlib.util.find_spec("data_lake") is not None:
+        return
+    scripts = Path(root).expanduser().resolve() / "infra" / "scripts"
+    if not (scripts / "data_lake" / "product_adapter.py").is_file():
+        raise ImportError(
+            f"SOLO_DATA_LAKE_ROOT={root} has no infra/scripts/data_lake/product_adapter.py"
+        )
+    if str(scripts) not in sys.path:
+        sys.path.insert(0, str(scripts))
 
 
 def _load_product_store():
-    for parent in _candidate_roots():
-        scripts = parent / "infra" / "scripts"
-        if (scripts / "data_lake" / "product_store.py").is_file():
-            if str(scripts) not in sys.path:
-                sys.path.insert(0, str(scripts))
-            break
     try:
+        _use_sibling_runtime()
         from data_lake import product_store as product_store_module  # type: ignore
     except ImportError as exc:
         raise SharedRuntimeUnavailable(
-            "Solo Empire data_lake runtime not found; install the [lake] extra, "
-            "set SOLO_EMPIRE_ROOT, or run from a Solo Empire checkout"
+            "shared data_lake runtime not found; install the [lake] extra "
+            "or set SOLO_DATA_LAKE_ROOT to a solo-data-lake checkout"
         ) from exc
 
     return product_store_module
@@ -47,7 +51,7 @@ def shared_runtime_available() -> bool:
     """Return True when the shared ``data_lake`` runtime and its deps import.
 
     Covers the installed ``[lake]`` extra (``solo-empire-data-lake``) and the
-    ``SOLO_EMPIRE_ROOT`` / parent-checkout fallback used inside Solo Empire.
+    ``SOLO_DATA_LAKE_ROOT`` sibling-checkout fallback.
     """
     try:
         import duckdb  # noqa: F401
@@ -83,7 +87,6 @@ def _contract():
         bronze_schema_version=config.LAKE_BRONZE_SCHEMA_VERSION,
         project_root=config.PROJECT_ROOT,
         data_lake_uri=_lake_uri() or "",
-        solo_empire_root=config.SOLO_EMPIRE_ROOT,
         lineage_filename=config.LINEAGE_FILE,
         datasets=(config.LAKE_DATASET_SIGNALS, config.LAKE_DATASET_HISTORY),
     )

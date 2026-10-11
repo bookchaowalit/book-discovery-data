@@ -17,17 +17,13 @@ and exposes a read-only API over committed Bronze Parquet.
 
 ## Run locally
 
-From the Solo Empire root, the task runs the replay from the infra working
-directory:
+Set `SOLO_DATA_LAKE_ROOT` to a solo-data-lake checkout and pass an explicit
+lake path:
 
-    task scraping:discovery:ingest -- --lake-uri ../data/lake-w5 --json
-
-From this checkout, use an explicit lake path:
-
-    ./scripts/ingest.sh --lake-uri ../../../../../../../../../data/lake-w5 --json
+    SOLO_DATA_LAKE_ROOT=/path/to/solo-data-lake ./scripts/ingest.sh --lake-uri /path/to/lake --json
     ./scripts/test.sh
 
-The test runner uses the parent virtualenv on POSIX or Windows/Git Bash.
+The test runner uses the solo-data-lake virtualenv on POSIX or Windows/Git Bash.
 API contract and capture replay tests run offline with fixtures, without local
 exports. Only the optional `book-job-scraping/data/exported` directory check
 is skipped with an explicit reason when that directory is absent.
@@ -48,7 +44,7 @@ says `job_started: false` and names the operator command
 | `CORS_ALLOWED_ORIGINS` | empty | Comma-separated extra origins; loopback origins are always allowed |
 | `STALE_AFTER_HOURS` | `36` | Records older than this report stale (history uses 4x); finite, > 0 |
 | `SOLO_EMPIRE_DATA_LAKE_URI` / `DATA_LAKE_URI` | empty | Lake root to read Bronze from |
-| `SOLO_EMPIRE_ROOT` | empty | Solo Empire checkout used to locate the shared runtime |
+| `SOLO_DATA_LAKE_ROOT` | empty | solo-data-lake checkout used to locate the shared runtime when the `[lake]` extra is not installed |
 | `LAKE_READ_MODE` | `parquet` | Passed to the shared lake reader |
 | `LAKE_READ_FALLBACK` | `error` | Passed to the shared lake reader |
 | `ALLOW_REFRESH` / `REFRESH_TOKEN` | off / empty | Enable the acknowledge-only `POST /v1/refresh` |
@@ -58,8 +54,8 @@ Invalid `API_PORT` or `STALE_AFTER_HOURS` values stop start-up with a
 `ConfigError` naming the variable (blank values use the default).
 
 The shared `data_lake` runtime comes from the `[lake]` extra
-(`solo-empire-data-lake`, pinned to a commit) or, inside Solo Empire, from
-`SOLO_EMPIRE_ROOT` / the parent directories of this checkout. If it is missing or the lake read
+(`solo-empire-data-lake`, pinned to a commit) or from the checkout named by
+`SOLO_DATA_LAKE_ROOT`. If it is missing or the lake read
 fails, GET endpoints answer `503` with `data_status: "unavailable"` and no
 paths or exception text; 404/403/400 responses never need the runtime.
 
@@ -77,7 +73,7 @@ in-memory store stubs (pagination, single record, CORS, refresh auth, 503).
 reads them back through `load_records`/`get_record`/`load_history`. It and the
 item-builder test skip with an explicit reason when the `[lake]` runtime is
 absent (install only `.[dev]` for a dependency-free run); `./scripts/test.sh` still runs the full suite plus the
-monorepo capture-replay test inside a Solo Empire checkout.
+capture-replay test from the solo-data-lake checkout (`SOLO_DATA_LAKE_ROOT`).
 
 ## Contract
 

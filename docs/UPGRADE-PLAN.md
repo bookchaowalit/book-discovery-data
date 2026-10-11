@@ -24,7 +24,7 @@ outside the monorepo, a lake failure dropped the HTTP connection, and there was 
 ## Done in this pass (pass 1)
 
 - Store: clear `SharedRuntimeUnavailable` instead of a bare ImportError; honours
-  `SOLO_EMPIRE_ROOT` (already used for the lake contract) before parent-directory search.
+  `SOLO_DATA_LAKE_ROOT` (already used for the lake contract) before parent-directory search.
 - API: GET failures return JSON 503 without leaking lake paths; 400/403/404/202 envelopes no
   longer require the shared runtime (POST /v1/refresh used to crash without it); refresh token
   compared with `hmac.compare_digest` and scheme parsed case-insensitively.
