@@ -15,7 +15,7 @@ class SharedRuntimeUnavailable(RuntimeError):
 
 
 def _use_sibling_runtime() -> None:
-    """Put a solo-data-lake checkout (``SOLO_DATA_LAKE_ROOT``) on ``sys.path``.
+    """Put a data-lake checkout (``SOLO_DATA_LAKE_ROOT``) on ``sys.path``.
 
     Only used when the ``solo-empire-data-lake`` package is not installed.
     """
@@ -38,7 +38,7 @@ def _load_product_store():
     except ImportError as exc:
         raise SharedRuntimeUnavailable(
             "shared data_lake runtime not found; install the [lake] extra "
-            "or set SOLO_DATA_LAKE_ROOT to a solo-data-lake checkout"
+            "or set SOLO_DATA_LAKE_ROOT to a data-lake checkout"
         ) from exc
 
     return product_store_module

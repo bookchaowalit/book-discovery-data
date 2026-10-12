@@ -17,13 +17,13 @@ and exposes a read-only API over committed Bronze Parquet.
 
 ## Run locally
 
-Set `SOLO_DATA_LAKE_ROOT` to a solo-data-lake checkout and pass an explicit
+Set `SOLO_DATA_LAKE_ROOT` to a data-lake checkout and pass an explicit
 lake path:
 
     SOLO_DATA_LAKE_ROOT=/path/to/solo-data-lake ./scripts/ingest.sh --lake-uri /path/to/lake --json
     ./scripts/test.sh
 
-The test runner uses the solo-data-lake virtualenv on POSIX or Windows/Git Bash.
+The test runner uses the data-lake virtualenv on POSIX or Windows/Git Bash.
 API contract and capture replay tests run offline with fixtures, without local
 exports. Only the optional `book-job-scraping/data/exported` directory check
 is skipped with an explicit reason when that directory is absent.
@@ -44,7 +44,7 @@ says `job_started: false` and names the operator command
 | `CORS_ALLOWED_ORIGINS` | empty | Comma-separated extra origins; loopback origins are always allowed |
 | `STALE_AFTER_HOURS` | `36` | Records older than this report stale (history uses 4x); finite, > 0 |
 | `SOLO_EMPIRE_DATA_LAKE_URI` / `DATA_LAKE_URI` | empty | Lake root to read Bronze from |
-| `SOLO_DATA_LAKE_ROOT` | empty | solo-data-lake checkout used to locate the shared runtime when the `[lake]` extra is not installed |
+| `SOLO_DATA_LAKE_ROOT` | empty | data-lake checkout used to locate the shared runtime when the `[lake]` extra is not installed |
 | `LAKE_READ_MODE` | `parquet` | Passed to the shared lake reader |
 | `LAKE_READ_FALLBACK` | `error` | Passed to the shared lake reader |
 | `ALLOW_REFRESH` / `REFRESH_TOKEN` | off / empty | Enable the acknowledge-only `POST /v1/refresh` |
@@ -73,7 +73,7 @@ in-memory store stubs (pagination, single record, CORS, refresh auth, 503).
 reads them back through `load_records`/`get_record`/`load_history`. It and the
 item-builder test skip with an explicit reason when the `[lake]` runtime is
 absent (install only `.[dev]` for a dependency-free run); `./scripts/test.sh` still runs the full suite plus the
-capture-replay test from the solo-data-lake checkout (`SOLO_DATA_LAKE_ROOT`).
+capture-replay test from the data-lake checkout (`SOLO_DATA_LAKE_ROOT`).
 
 ## Contract
 

@@ -8,9 +8,9 @@ dependencies = []
 [project.optional-dependencies]
 # Shared lake-first runtime (Bronze Parquet, DuckDB reads), pinned to an exact
 # commit so CI runs the lake tests reproducibly. Without the
-# package, SOLO_DATA_LAKE_ROOT may point at a solo-data-lake checkout.
+# package, SOLO_DATA_LAKE_ROOT may point at a data-lake checkout.
 lake = [
-  "solo-empire-data-lake[lake] @ https://github.com/bookchaowalit/solo-empire-data-lake/archive/b8f8698995a4d4283247bd432d521b337ef8ec94.tar.gz",
+  "solo-empire-data-lake[lake] @ https://github.com/bookchaowalit/data-lake-core/archive/b8f8698995a4d4283247bd432d521b337ef8ec94.tar.gz",
 ]
 dev = ["pytest>=7", "ruff>=0.5"]
 
