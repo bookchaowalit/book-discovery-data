@@ -4,7 +4,7 @@ Lake-first technology discovery data boundary for discovery.v1.
 
 The original canonical checkout was unavailable, so this repository was rebuilt
 from a local scaffold that restores the declared product boundary and test
-command; it is now published at `github.com/bookchaowalit/tech-discovery-data`.
+command; it is now published at `github.com/bookchaowalit/book-discovery-data`.
 The approved producer remains book-job-scraping; this product reads its four
 public capture families, archives exact bytes through the shared lake adapter,
 and exposes a read-only API over committed Bronze Parquet.

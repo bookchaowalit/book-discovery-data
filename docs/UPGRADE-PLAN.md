@@ -5,7 +5,7 @@ outside the monorepo, a lake failure dropped the HTTP connection, and there was 
 
 ## Backlog
 
-- P1: The remote now exists (`origin` = github.com/bookchaowalit/tech-discovery-data, history
+- P1: The remote now exists (`origin` = github.com/bookchaowalit/book-discovery-data, history
   starts at scaffold commit `9bf8715`); close README task #91 once the owner confirms no older
   canonical history must be reconciled.
 - P1 (cross-repo decision): `/v1/refresh` is acknowledge-only in every `book-*-data` API and
