@@ -11,7 +11,7 @@ class DiscoveryDataApiTests(unittest.TestCase):
     def test_optional_local_capture_directory(self) -> None:
         source = Path(
             config.PROJECT_ROOT.parent
-            / "book-job-scraping"
+            / "career-job-scraper"
             / "data"
             / "exported"
         )
