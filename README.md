@@ -2,9 +2,20 @@
 
 Lake-first technology discovery data boundary for discovery.v1.
 
-The original canonical checkout was unavailable, so this repository was rebuilt
-from a local scaffold that restores the declared product boundary and test
-command; it is now published at `github.com/bookchaowalit/tech-discovery-data`.
+This is the published source boundary for `discovery.v1`. Its canonical origin
+is [bookchaowalit/tech-discovery-data](https://github.com/bookchaowalit/tech-discovery-data).
+
+| Publication / release evidence (reviewed 2026-10-15) | State |
+| --- | --- |
+| Source publication | `external-source-published` |
+| Last published source commit recorded by local `origin/main` | `45be1a2215e2ef643b3d55a1165a67d02face842` |
+| Last release commit | None recorded; no release tag or approved release evidence in this checkout |
+| Deployment | None; no hosted endpoint is claimed |
+
+The source commit is a publication baseline, not proof of a release or owner
+acceptance. Historical-origin reconciliation remains a separate owner review
+under task #91; it does not mean this published checkout is unavailable.
+
 The approved producer remains book-job-scraping; this product reads its four
 public capture families, archives exact bytes through the shared lake adapter,
 and exposes a read-only API over committed Bronze Parquet.
@@ -77,7 +88,8 @@ capture-replay test from the data-lake checkout (`SOLO_DATA_LAKE_ROOT`).
 
 ## Contract
 
-The boundary follows the repository's discovery-data-contract-v1.yaml:
+The boundary implements `discovery.v1` from the portfolio's
+`systems/architecture/discovery-data-contract-v1.yaml`:
 
 - source book-discovery-data, domain discovery, schema discovery.v1;
 - approved public captures from GitHub, Hacker News, DEV.to, and Product Hunt;
@@ -85,6 +97,6 @@ The boundary follows the repository's discovery-data-contract-v1.yaml:
 - malformed or ambiguous capture rows fail closed before any projection;
 - consumers use the API or Bronze DuckDB and never read scraper CSVs directly.
 
-This product has no deployment. Keep task #91 open until the owner confirms no
-older canonical history needs reconciling and the checkout receives its normal
-review and release evidence.
+This product has no deployment. Task #91 is limited to historical-origin
+reconciliation and normal review/release evidence; its open status does not
+contradict the published source boundary above.
