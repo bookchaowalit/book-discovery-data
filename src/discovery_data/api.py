@@ -18,9 +18,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from . import config
 from .store import envelope, get_record, load_history, load_records, paginate, utc_now_iso
 
-_LOCAL_ORIGIN_RE = re.compile(
-    r"^https?://(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$", re.I
-)
+_LOCAL_ORIGIN_RE = re.compile(r"^https?://(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$", re.I)
 
 
 def _allowed_cors_origin(origin: str | None) -> str | None:
@@ -238,7 +236,7 @@ class DataProductHandler(BaseHTTPRequestHandler):
             )
 
         if path.startswith("/v1/records/"):
-            raw_record_id = path[len("/v1/records/"):]
+            raw_record_id = path[len("/v1/records/") :]
             record_id = unquote(raw_record_id)
             if not record_id:
                 return _json_response(self, 400, _status_envelope("error", "missing record_id"))
@@ -246,9 +244,7 @@ class DataProductHandler(BaseHTTPRequestHandler):
             # turn an id containing "%25" into a different id.
             item = get_record(raw_record_id)
             if item is None:
-                return _json_response(
-                    self, 404, _status_envelope("not_found", "record not found", record_id=record_id)
-                )
+                return _json_response(self, 404, _status_envelope("not_found", "record not found", record_id=record_id))
             records = load_records()
             return _json_response(
                 self,
@@ -328,9 +324,7 @@ class DataProductHandler(BaseHTTPRequestHandler):
         return _json_response(self, 202, body)
 
 
-def create_server(
-    host: str | None = None, port: int | None = None
-) -> ThreadingHTTPServer:
+def create_server(host: str | None = None, port: int | None = None) -> ThreadingHTTPServer:
     return ThreadingHTTPServer(
         (host or config.API_HOST, port if port is not None else config.API_PORT),
         DataProductHandler,
