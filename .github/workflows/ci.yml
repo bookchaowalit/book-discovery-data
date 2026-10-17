@@ -1,5 +1,6 @@
 # CI + security baseline (DevSecOps Phase 1). Public repository: GitHub-hosted runners.
 # Replaces the previous standalone CI workflow (Ruff + pytest on a 3.11/3.12 matrix), which this duplicates.
+# The reusable workflow takes one Python version per job, so the matrix becomes two jobs.
 name: CI
 
 on:
@@ -16,7 +17,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  data:
+  data-py311:
+    uses: bookchaowalit/platform-ci-workflows/.github/workflows/ci-python.yml@c37ef9d113eefb3ed45429717cb7ca201192c3fc # v1.0.1
+    with:
+      python-version: "3.11" # requires-python floor
+      # [lake] installs the pinned solo-empire-data-lake runtime, so the Bronze round-trip tests
+      # run instead of skipping; [dev] brings pytest and Ruff.
+      install-command: uv pip install -e ".[dev,lake]"
+      # Lake runtime must be importable, then the offline tests (lake tests write only to a temp dir).
+      test-command: >-
+        python -c "from discovery_data import store; assert store.shared_runtime_available()" &&
+        python -m pytest -q -rs
+
+  data-py312:
     uses: bookchaowalit/platform-ci-workflows/.github/workflows/ci-python.yml@c37ef9d113eefb3ed45429717cb7ca201192c3fc # v1.0.1
     with:
       python-version: "3.12"
