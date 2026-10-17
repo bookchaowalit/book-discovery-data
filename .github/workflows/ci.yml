@@ -1,31 +1,32 @@
+# CI + security baseline (DevSecOps Phase 1). Public repository: GitHub-hosted runners.
+# Replaces the previous standalone CI workflow (Ruff + pytest on a 3.11/3.12 matrix), which this duplicates.
 name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12"]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      # [lake] installs the pinned solo-empire-data-lake runtime, so the
-      # Bronze round-trip tests run here instead of skipping.
-      - name: Install package with dev tools and the shared lake runtime
-        run: python -m pip install -e ".[dev,lake]"
-      - name: Check shared lake runtime is importable
-        run: python -c "from discovery_data import store; assert store.shared_runtime_available()"
-      - name: Lint
-        run: ruff check .
-      - name: Tests (offline; lake tests write only to a temp directory)
-        run: python -m pytest -q -rs
+  data:
+    uses: bookchaowalit/platform-ci-workflows/.github/workflows/ci-python.yml@c37ef9d113eefb3ed45429717cb7ca201192c3fc # v1.0.1
+    with:
+      python-version: "3.12"
+      # [lake] installs the pinned solo-empire-data-lake runtime, so the Bronze round-trip tests
+      # run instead of skipping; [dev] brings pytest and Ruff.
+      install-command: uv pip install -e ".[dev,lake]"
+      # Lake runtime must be importable, then the offline tests (lake tests write only to a temp dir).
+      test-command: >-
+        python -c "from discovery_data import store; assert store.shared_runtime_available()" &&
+        python -m pytest -q -rs
+
+  security:
+    uses: bookchaowalit/platform-ci-workflows/.github/workflows/security.yml@c37ef9d113eefb3ed45429717cb7ca201192c3fc # v1.0.1
