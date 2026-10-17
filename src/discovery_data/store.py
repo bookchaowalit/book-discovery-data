@@ -24,9 +24,7 @@ def _use_sibling_runtime() -> None:
         return
     scripts = Path(root).expanduser().resolve() / "infra" / "scripts"
     if not (scripts / "data_lake" / "product_adapter.py").is_file():
-        raise ImportError(
-            f"SOLO_DATA_LAKE_ROOT={root} has no infra/scripts/data_lake/product_adapter.py"
-        )
+        raise ImportError(f"SOLO_DATA_LAKE_ROOT={root} has no infra/scripts/data_lake/product_adapter.py")
     if str(scripts) not in sys.path:
         sys.path.insert(0, str(scripts))
 
@@ -117,16 +115,9 @@ def _attribution_required(value: Any) -> bool:
     return str(value).strip().casefold() not in {"false", "0", "no", "off"}
 
 
-def signal_item_from_bronze(
-    row: dict[str, Any], *, history: bool = False, history_idx: int = 0
-) -> dict[str, Any]:
+def signal_item_from_bronze(row: dict[str, Any], *, history: bool = False, history_idx: int = 0) -> dict[str, Any]:
     payload = _ps().parse_payload_json(row)
-    event_time = str(
-        row.get("event_time")
-        or payload.get("captured_at")
-        or payload.get("observed_at")
-        or ""
-    )
+    event_time = str(row.get("event_time") or payload.get("captured_at") or payload.get("observed_at") or "")
     item: dict[str, Any] = {}
     for key, value in payload.items():
         if key == "id":
@@ -186,9 +177,7 @@ def load_history(*, data_lake_uri: str | None = None) -> dict[str, Any]:
     )
 
 
-def get_record(
-    record_id: str, *, data_lake_uri: str | None = None
-) -> dict[str, Any] | None:
+def get_record(record_id: str, *, data_lake_uri: str | None = None) -> dict[str, Any] | None:
     return _ps().get_record_from_payload(
         record_id,
         load_records(data_lake_uri=data_lake_uri),

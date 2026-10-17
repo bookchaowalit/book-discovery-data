@@ -9,12 +9,7 @@ from discovery_data import api, config, store
 
 class DiscoveryDataApiTests(unittest.TestCase):
     def test_optional_local_capture_directory(self) -> None:
-        source = Path(
-            config.PROJECT_ROOT.parent
-            / "career-job-scraper"
-            / "data"
-            / "exported"
-        )
+        source = Path(config.PROJECT_ROOT.parent / "career-job-scraper" / "data" / "exported")
         if not source.exists():
             self.skipTest(
                 "Optional book-job-scraping/data/exported is unavailable; "
@@ -72,10 +67,7 @@ class DiscoveryDataApiTests(unittest.TestCase):
                 "event_time": "2026-09-12T00:00:00Z",
                 "source_record_id": "github_trending|example/repo",
                 "ingest_run_id": "run-001",
-                "raw_object_key": (
-                    "landing/source=book-discovery-data/"
-                    "batch-001/payload.csv"
-                ),
+                "raw_object_key": ("landing/source=book-discovery-data/batch-001/payload.csv"),
                 "payload_json": json.dumps(
                     {
                         "id": "github_trending|example/repo",
@@ -83,9 +75,7 @@ class DiscoveryDataApiTests(unittest.TestCase):
                         "source": "github_trending",
                         "title": "Example repository",
                         "url": "https://github.com/example/repo",
-                        "source_url": (
-                            "https://api.github.com/search/repositories"
-                        ),
+                        "source_url": ("https://api.github.com/search/repositories"),
                         "captured_at": "2026-09-12T00:00:00Z",
                         "capture_kind": "current_snapshot",
                         "attribution_required": True,

@@ -188,9 +188,11 @@ class RuntimeDiscoveryTests(unittest.TestCase):
                 store._ps()
 
     def test_bad_data_lake_root_raises_clear_error(self):
-        with patch.object(store, "_PRODUCT_STORE", None), patch.object(
-            config, "SOLO_DATA_LAKE_ROOT", "/nonexistent/solo-data-lake"
-        ), patch("importlib.util.find_spec", return_value=None):
+        with (
+            patch.object(store, "_PRODUCT_STORE", None),
+            patch.object(config, "SOLO_DATA_LAKE_ROOT", "/nonexistent/solo-data-lake"),
+            patch("importlib.util.find_spec", return_value=None),
+        ):
             with self.assertRaises(store.SharedRuntimeUnavailable):
                 store._ps()
 
